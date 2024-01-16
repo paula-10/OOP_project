@@ -1,14 +1,17 @@
 package app.user;
 
+import app.CommandRunner;
 import app.audio.Collections.Podcast;
 import app.pages.HostPage;
+import app.utils.WrappedRecap;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.ArrayList;
 
 /**
  * The type Host.
  */
-public final class Host extends ContentCreator {
+public final class Host extends ContentCreator implements WrappedRecap {
     private ArrayList<Podcast> podcasts;
     private ArrayList<Announcement> announcements;
 
@@ -98,5 +101,13 @@ public final class Host extends ContentCreator {
     @Override
     public String userType() {
         return "host";
+    }
+
+    @Override
+    public ObjectNode getWrappedLayout() {
+        ObjectNode res = CommandRunner.getObjectMapper().createObjectNode();
+        res.put("topEpisodes", "");
+        res.put("listeners", "");
+        return res;
     }
 }

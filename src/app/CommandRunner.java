@@ -11,6 +11,7 @@ import app.user.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import fileio.input.CommandInput;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +23,7 @@ public final class CommandRunner {
     /**
      * The Object mapper.
      */
+    @Getter
     private static ObjectMapper objectMapper = new ObjectMapper();
     private static Admin admin;
 
@@ -598,6 +600,37 @@ public final class CommandRunner {
 
         return objectNode;
     }
+
+    public static ObjectNode showWrapped(final CommandInput commandInput) {
+
+        ObjectNode objectNode = objectMapper.createObjectNode();
+        ObjectNode wrapped = objectMapper.createObjectNode();
+        objectNode.put("command", commandInput.getCommand());
+        objectNode.put("user", commandInput.getUsername());
+        objectNode.put("timestamp", commandInput.getTimestamp());
+
+        Host host = admin.getHost(commandInput.getUsername());
+        if(host != null)
+        {
+            wrapped = host.getWrappedLayout();
+        }
+        User user = admin.getUser(commandInput.getUsername());
+        if(user != null)
+        {
+            wrapped = user.getWrappedLayout();
+        }
+        Artist artist = admin.getArtist(commandInput.getUsername());
+        if(artist != null)
+        {
+            wrapped = artist.getWrappedLayout();
+        }
+        objectNode.put("result", wrapped);
+
+
+
+        return objectNode;
+    }
+
 
     /**
      * Add merch object node.

@@ -3,15 +3,18 @@ package app.user;
 import java.util.ArrayList;
 import java.util.List;
 
+import app.CommandRunner;
 import app.audio.Collections.Album;
 import app.audio.Collections.AlbumOutput;
 import app.audio.Files.Song;
 import app.pages.ArtistPage;
+import app.utils.WrappedRecap;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * The type Artist.
  */
-public final class Artist extends ContentCreator {
+public final class Artist extends ContentCreator implements WrappedRecap {
     private ArrayList<Album> albums;
     private ArrayList<Merchandise> merch;
     private ArrayList<Event> events;
@@ -124,5 +127,15 @@ public final class Artist extends ContentCreator {
      */
     public String userType() {
         return "artist";
+    }
+
+    @Override
+    public ObjectNode getWrappedLayout() {
+        ObjectNode res = CommandRunner.getObjectMapper().createObjectNode();
+        res.put("topAlbums", "");
+        res.put("topSongs", "");
+        res.put("topFans", "");
+        res.put("listeners", "");
+        return res;
     }
 }

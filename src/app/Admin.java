@@ -21,6 +21,7 @@ import fileio.input.PodcastInput;
 import fileio.input.SongInput;
 import fileio.input.UserInput;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,7 +46,11 @@ public final class Admin {
     private List<Host> hosts = new ArrayList<>();
     private List<Song> songs = new ArrayList<>();
     private List<Podcast> podcasts = new ArrayList<>();
+    @Getter
     private int timestamp = 0;
+    @Setter
+    @Getter
+    private int oldTimestamp = 0;
     private final int limit = 5;
     private final int dateStringLength = 10;
     private final int dateFormatSize = 3;

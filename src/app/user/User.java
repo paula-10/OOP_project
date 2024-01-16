@@ -1,5 +1,8 @@
 package app.user;
 
+import app.Admin;
+import app.CommandRunner;
+import app.audio.Collections.Album;
 import app.audio.Collections.AudioCollection;
 import app.audio.Collections.Playlist;
 import app.audio.Collections.PlaylistOutput;
@@ -14,16 +17,18 @@ import app.player.PlayerStats;
 import app.searchBar.Filters;
 import app.searchBar.SearchBar;
 import app.utils.Enums;
+import app.utils.WrappedRecap;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Getter;
 import lombok.Setter;
+import org.antlr.v4.runtime.misc.Pair;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * The type User.
  */
-public final class User extends UserAbstract {
+public final class User extends UserAbstract implements WrappedRecap {
     @Getter
     private ArrayList<Playlist> playlists;
     @Getter
@@ -46,6 +51,11 @@ public final class User extends UserAbstract {
     @Setter
     private LikedContentPage likedContentPage;
 
+    private HashMap<String, Integer> listenedSongs;
+    private HashMap<String, Integer> listenedAlbums;
+    PriorityQueue<Pair<String, Integer>> maxHeapSongs;
+    PriorityQueue<Pair<String, Integer>> maxHeapAlbums;
+
     /**
      * Instantiates a new User.
      *
@@ -59,10 +69,13 @@ public final class User extends UserAbstract {
         likedSongs = new ArrayList<>();
         followedPlaylists = new ArrayList<>();
         player = new Player();
+        listenedSongs = new HashMap<>();
+        listenedAlbums = new HashMap<>();
         searchBar = new SearchBar(username);
         lastSearched = false;
         status = true;
-
+        maxHeapSongs = new PriorityQueue<>(new MaxHeapComparator());
+        maxHeapAlbums = new PriorityQueue<>(new MaxHeapComparator());
         homePage = new HomePage(this);
         currentPage = homePage;
         likedContentPage = new LikedContentPage(this);
@@ -161,6 +174,40 @@ public final class User extends UserAbstract {
             return "You can't load an empty audio collection!";
         }
 
+        var x = searchBar.getLastSearchType();
+        var name = searchBar.getLastSelected().getName();
+        var username = getUsername();
+
+
+        if(searchBar.isWasAlbum())
+        {
+            int dur = 0;
+            int timeInterval = Admin.getInstance().getTimestamp() - Admin.getInstance().getOldTimestamp();
+            Album a = Admin.getInstance().getAlbums()
+                    .stream()
+                    .filter(f -> f.getName().equals(searchBar.getPrevAlbumSelected()))
+                    .findFirst()
+                    .orElse(null);
+            for(var s : a.getSongs())
+            {
+                if(dur + s.getDuration() <= timeInterval)
+                {
+                    addToListenedSongs(s.getName());
+                    dur+=s.getDuration();
+                }
+                else break;
+            }
+            searchBar.setWasAlbum(false);
+        }
+
+        if(searchBar.getLastSearchType().equals("song"))
+        {
+            String nume = searchBar.getLastSelected().getName();
+            addToListenedSongs(nume);
+        } else if (searchBar.getLastSearchType().equals("album")) {
+            searchBar.setWasAlbum(true);
+            searchBar.setPrevAlbumSelected(searchBar.getLastSelected().getName());
+        }
         player.setSource(searchBar.getLastSelected(), searchBar.getLastSearchType());
         searchBar.clearSelection();
 
@@ -168,7 +215,37 @@ public final class User extends UserAbstract {
 
         return "Playback loaded successfully.";
     }
+    private void addToListenedSongs(String name)
+    {
+        if(listenedSongs.containsKey(name))
+        {
+            int val = listenedSongs.get(name);
+            listenedSongs.put(name, val + 1);
+        }
+        else
+        {
+            listenedSongs.put(name, 1);
+        }
 
+        Song s = Admin.getInstance().getSongs().stream()
+                .filter(f -> f.getName().equals(name))
+                .findFirst()
+                .orElse(null);
+        addToListenedAlbums(s.getAlbum());
+    }
+
+    private void addToListenedAlbums(String name)
+    {
+        if(listenedAlbums.containsKey(name))
+        {
+            int val = listenedAlbums.get(name);
+            listenedAlbums.put(name, val + 1);
+        }
+        else
+        {
+            listenedAlbums.put(name, 1);
+        }
+    }
     /**
      * Play pause string.
      *
@@ -573,6 +650,22 @@ public final class User extends UserAbstract {
     /**
      * Switch status.
      */
+
+    // Custom comparator for the max heap
+    static class MaxHeapComparator implements java.util.Comparator<Pair<String, Integer>> {
+        @Override
+        public int compare(Pair<String, Integer> pair1, Pair<String, Integer> pair2) {
+            // Compare based on the integer values
+            int result = Integer.compare(pair2.b, pair1.b);
+
+            // If the integers are equal, compare based on the lexicographical order of the strings
+            if (result == 0) {
+                return pair1.a.compareTo(pair2.a);
+            }
+
+            return result;
+        }
+    }
     public void switchStatus() {
         status = !status;
     }
@@ -589,4 +682,63 @@ public final class User extends UserAbstract {
 
         player.simulatePlayer(time);
     }
+
+    public TreeMap<String, Integer> getTop5Songs()
+    {
+        TreeMap<String, Integer> rez = new TreeMap<>();
+
+        maxHeapSongs = new PriorityQueue<>(new MaxHeapComparator());
+
+        for(var s : listenedSongs.keySet())
+        {
+            maxHeapSongs.add(new Pair<>(s, listenedSongs.get(s)));
+        }
+
+        for(int i=0;i<5;++i)
+        {
+            if(!maxHeapSongs.isEmpty())
+            {
+                Pair<String, Integer> top = maxHeapSongs.poll();
+                rez.put(top.a, top.b);
+            }
+        }
+
+        return rez;
+    }
+
+
+    public TreeMap<String, Integer> getTop5Albums()
+    {
+        TreeMap<String, Integer> rez = new TreeMap<>();
+
+        maxHeapAlbums = new PriorityQueue<>(new MaxHeapComparator());
+
+        for(var s : listenedAlbums.keySet())
+        {
+            maxHeapAlbums.add(new Pair<>(s, listenedAlbums.get(s)));
+        }
+        for(int i=0;i<5;++i)
+        {
+            if(!maxHeapAlbums.isEmpty())
+            {
+                Pair<String, Integer> top = maxHeapAlbums.poll();
+                rez.put(top.a, top.b);
+            }
+        }
+
+        return rez;
+    }
+
+    @Override
+    public ObjectNode getWrappedLayout() {
+
+       ObjectNode res = CommandRunner.getObjectMapper().createObjectNode();
+       res.put("topArtists", "");
+       res.put("topGenres", "");
+       res.put("topSongs", CommandRunner.getObjectMapper().valueToTree(getTop5Songs()));
+       res.put("topAlbums", CommandRunner.getObjectMapper().valueToTree(getTop5Albums()));
+       res.put("topEpisodes", "");
+       return res;
+    }
+
 }

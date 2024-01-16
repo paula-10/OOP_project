@@ -2,9 +2,11 @@ package app.searchBar;
 
 
 import app.Admin;
+import app.audio.Collections.Album;
 import app.audio.LibraryEntry;
 import app.user.ContentCreator;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,9 +37,15 @@ public final class SearchBar {
     @Getter
     private LibraryEntry lastSelected;
     @Getter
+    @Setter
+    private String prevAlbumSelected;
+    @Getter
     private List<ContentCreator> resultsContentCreator;
     @Getter
     private ContentCreator lastContentCreatorSelected;
+    @Getter
+    @Setter
+    private boolean wasAlbum = false;
 
     /**
      * Update admin.

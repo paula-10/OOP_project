@@ -11,8 +11,4 @@ public abstract class AudioFile extends LibraryEntry {
         super(name);
         this.duration = duration;
     }
-
-    public Integer getDuration() {
-        return duration;
-    }
 }

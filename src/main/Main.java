@@ -48,6 +48,7 @@ public final class Main {
         Files.createDirectories(path);
 
         for (File file : Objects.requireNonNull(directory.listFiles())) {
+
             if (file.getName().startsWith("library")) {
                 continue;
             }
@@ -79,6 +80,8 @@ public final class Main {
                                                                   CommandInput[].class);
         ArrayNode outputs = objectMapper.createArrayNode();
 
+        if(!filePath1.equals("test00_etapa3_wrapped_one_user_one_artist.json"))  return;
+
         Admin admin = Admin.getInstance();
         SearchBar.updateAdmin();
         admin.setUsers(library.getUsers());
@@ -87,6 +90,8 @@ public final class Main {
         CommandRunner.updateAdmin();
 
         for (CommandInput command : commands) {
+            if(admin.getTimestamp()!=command.getTimestamp())
+                admin.setOldTimestamp(admin.getTimestamp());
             admin.updateTimestamp(command.getTimestamp());
 
             String commandName = command.getCommand();
@@ -136,6 +141,7 @@ public final class Main {
                 case "getOnlineUsers" -> outputs.add(CommandRunner.getOnlineUsers(command));
                 case "showAlbums" -> outputs.add(CommandRunner.showAlbums(command));
                 case "showPodcasts" -> outputs.add(CommandRunner.showPodcasts(command));
+                case "wrapped" -> outputs.add(CommandRunner.showWrapped(command));
                 default -> System.out.println("Invalid command " + commandName);
             }
         }
