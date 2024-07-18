@@ -1,0 +1,169 @@
+package app.searchBar;
+
+import app.search.SearchEntry;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * The type Filter utils.
+ */
+public final class FilterUtils {
+
+    private FilterUtils() {
+    }
+
+    /**
+     * Filter by name list.
+     *
+     * @param entries the entries
+     * @param name    the name
+     * @return the list
+     */
+    public static List<SearchEntry> filterByName(final List<SearchEntry> entries,
+                                                 final String name) {
+        List<SearchEntry> result = new ArrayList<>();
+        for (SearchEntry entry : entries) {
+            if (entry.matchesName(name)) {
+                result.add(entry);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Filter by album list.
+     *
+     * @param entries the entries
+     * @param album   the album
+     * @return the list
+     */
+    public static List<SearchEntry> filterByAlbum(final List<SearchEntry> entries,
+                                                  final String album) {
+        return filter(entries, entry -> entry.matchesAlbum(album));
+    }
+
+    /**
+     * Filter by tags list.
+     *
+     * @param entries the entries
+     * @param tags    the tags
+     * @return the list
+     */
+    public static List<SearchEntry> filterByTags(final List<SearchEntry> entries,
+                                                 final ArrayList<String> tags) {
+        return filter(entries, entry -> entry.matchesTags(tags));
+    }
+
+    /**
+     * Filter by lyrics list.
+     *
+     * @param entries the entries
+     * @param lyrics  the lyrics
+     * @return the list
+     */
+    public static List<SearchEntry> filterByLyrics(final List<SearchEntry> entries,
+                                                   final String lyrics) {
+        return filter(entries, entry -> entry.matchesLyrics(lyrics));
+    }
+
+    /**
+     * Filter by genre list.
+     *
+     * @param entries the entries
+     * @param genre   the genre
+     * @return the list
+     */
+    public static List<SearchEntry> filterByGenre(final List<SearchEntry> entries,
+                                                  final String genre) {
+        return filter(entries, entry -> entry.matchesGenre(genre));
+    }
+
+    /**
+     * Filter by artist list.
+     *
+     * @param entries the entries
+     * @param artist  the artist
+     * @return the list
+     */
+    public static List<SearchEntry> filterByArtist(final List<SearchEntry> entries,
+                                                   final String artist) {
+        return filter(entries, entry -> entry.matchesArtist(artist));
+    }
+
+    /**
+     * Filter by release year list.
+     *
+     * @param entries     the entries
+     * @param releaseYear the release year
+     * @return the list
+     */
+    public static List<SearchEntry> filterByReleaseYear(final List<SearchEntry> entries,
+                                                        final String releaseYear) {
+        return filter(entries, entry -> entry.matchesReleaseYear(releaseYear));
+    }
+
+    /**
+     * Filter by owner list.
+     *
+     * @param entries the entries
+     * @param user    the user
+     * @return the list
+     */
+    public static List<SearchEntry> filterByOwner(final List<SearchEntry> entries,
+                                                  final String user) {
+        return filter(entries, entry -> entry.matchesOwner(user));
+    }
+
+    /**
+     * Filter by playlist visibility list.
+     *
+     * @param entries the entries
+     * @param user    the user
+     * @return the list
+     */
+    public static List<SearchEntry> filterByPlaylistVisibility(final List<SearchEntry> entries,
+                                                               final String user) {
+        return filter(entries, entry -> entry.isVisibleToUser(user));
+    }
+
+    /**
+     * Filter by followers list.
+     *
+     * @param entries   the entries
+     * @param followers the followers
+     * @return the list
+     */
+    public static List<SearchEntry> filterByFollowers(final List<SearchEntry> entries,
+                                                      final String followers) {
+        return filter(entries, entry -> entry.matchesFollowers(followers));
+    }
+
+
+    public static List<SearchEntry> filterByDescription(final List<SearchEntry> entries,
+                                                        final String description) {
+        return filter(entries, entry -> entry.matchesDescription(description));
+    }
+
+    private static List<SearchEntry> filter(final List<SearchEntry> entries,
+                                            final FilterCriteria criteria) {
+        List<SearchEntry> result = new ArrayList<>();
+        for (SearchEntry entry : entries) {
+            if (criteria.matches(entry)) {
+                result.add(entry);
+            }
+        }
+        return result;
+    }
+
+    @FunctionalInterface
+    private interface FilterCriteria {
+        /**
+         * Matches boolean.
+         *
+         * @param entry the entry
+         * @return the boolean
+         */
+        boolean matches(SearchEntry entry);
+    }
+}
